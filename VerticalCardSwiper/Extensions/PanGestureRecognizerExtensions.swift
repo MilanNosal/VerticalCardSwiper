@@ -22,27 +22,34 @@
 
 import UIKit
 
-extension UICollectionView {
+/// The direction of the `UIPanGesture`.
+public enum PanDirection: Int {
+    case Up
+    case Down
+    case Left
+    case Right
+    case None
     
-    /// A `Bool` that indicates if the `UICollectionView` is currently scrolling.
-    public var isScrolling: Bool {
-        return (self.isDragging || self.isTracking || self.isDecelerating)
-    }
-    
+    /// Returns true is the PanDirection is horizontal.
+    public var isX: Bool { return self == .Left || self == .Right }
+    /// Returns true if the PanDirection is vertical.
+    public var isY: Bool { return self == .Up || self == .Down }
+}
+
+extension UIPanGestureRecognizer {
+        
     /**
-     This function animates the cards from the bottom on first load.
-     You should use this function inside `viewDidAppear`.
-    */
-    public func animateIn() {
-        var counter: Double = 1
-        for cell in visibleCells {
-            
-            cell.transform = CGAffineTransform(translationX: 0, y: bounds.height + cell.bounds.height)
-            
-            UIView.animate(withDuration: 0.6, delay: 0.3 * counter, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.6, options: .curveEaseInOut, animations: {
-                cell.transform = CGAffineTransform.identity
-                counter -= 1
-            }, completion: nil)
+     This calculated var stores the direction of the gesture received by the `UIPanGestureRecognizer`.
+     */
+    public var direction: PanDirection? {
+        let velocity = self.velocity(in: view)
+        let vertical = fabs(velocity.y) > fabs(velocity.x)
+        switch (vertical, velocity.x, velocity.y) {
+        case (true, _, let y) where y < 0: return .Up
+        case (true, _, let y) where y > 0: return .Down
+        case (false, let x, _) where x > 0: return .Right
+        case (false, let x, _) where x < 0: return .Left
+        default: return PanDirection.None
         }
     }
 }
